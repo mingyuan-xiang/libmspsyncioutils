@@ -1,9 +1,13 @@
-#include <include/mspsyncioutils.h>
+#include <libmatAbstract/mat.h>
+#include <libmspsyncioutils/mspsyncioutils.h>
+#include <libmspsyncioutils/uartio_msg.h>
+
+#define _PUTC(c) PUTC(CONFIG_PRINT_PORT, c)
 
 static uint8_t ack;
 
-static inline void wait_ack() {
-  while (_RECVC() != ack)
+void wait_ack() {
+  while (uartio_getchar(CONFIG_PRINT_PORT) != ack)
     ;
   ack++;
 }
@@ -11,7 +15,7 @@ static inline void wait_ack() {
 /*
 * Send a 16-bit number in big endian
 */
-static inline size_t _PUT16(uint16_t num) {
+size_t _PUT16(uint16_t num) {
   size_t ret = 0;
   ret += _PUTC((uint8_t)((num >> 8) & 0xFF));
   ret += _PUTC((uint8_t)(num & 0xFF));
@@ -19,7 +23,7 @@ static inline size_t _PUT16(uint16_t num) {
 }
 
 /* send a matrix in a synchronized way */
-static size_t msp_send_mat(mat_t* mat) {
+size_t msp_send_mat(mat_t* mat) {
   size_t ret = 0;
   // send the type
   ret += _PUTC(UARTIO_MSG_TYPE_MAT);
@@ -32,14 +36,14 @@ static size_t msp_send_mat(mat_t* mat) {
   wait_ack();
 
   // send the matrix data
-  size_t size = mat_get_size(mat);
+  size_t size = MAT_GET_SIZE(mat);
   size_t st = 0;
   size_t ed = UARTIO_16BIT_BUFFER_SIZE;
   while (size > UARTIO_16BIT_BUFFER_SIZE) {
     for (int i = st; i < ed; i++) {
       ret += _PUT16((uint16_t)(mat->data[i]));
     }
-    // wait for acknowledgement for sent header
+    // wait for acknowledgement for sent data
     wait_ack();
 
     st += UARTIO_16BIT_BUFFER_SIZE;
@@ -47,18 +51,18 @@ static size_t msp_send_mat(mat_t* mat) {
     size -= UARTIO_16BIT_BUFFER_SIZE;
   }
 
-  ed = mat_get_size(mat);
+  ed = MAT_GET_SIZE(mat);
   for (int i = st; i < ed; i++) {
     ret += _PUT16((uint16_t)(mat->data[i]));
   }
-  // wait for acknowledgement for sent header
+  // wait for acknowledgement for sent data
   wait_ack();
 
   return ret;
 }
 
 /* send a byte array in a synchronized way */
-static size_t msp_send_bytes(uint8_t* bytes, size_t len) {
+size_t msp_send_bytes(uint8_t* bytes, size_t len) {
   size_t ret = 0;
   // send the type
   ret += _PUTC(UARTIO_MSG_TYPE_BYTES);
@@ -71,23 +75,23 @@ static size_t msp_send_bytes(uint8_t* bytes, size_t len) {
   size_t size = len;
   uint8_t* ptr = bytes;
   while (size > UARTIO_BUFFER_SIZE) {
-    ret += _PUT_BYTES(ptr, UARTIO_BUFFER_SIZE);
-    // wait for acknowledgement for sent header
+    ret += uartio_send_sync(CONFIG_PRINT_PORT, ptr, UARTIO_BUFFER_SIZE);
+    // wait for acknowledgement for sent data
     wait_ack();
 
-    ptr += UARTIO_BUFFER_SIZE
+    ptr += UARTIO_BUFFER_SIZE;
     size -= UARTIO_BUFFER_SIZE;
   }
 
-  ret += _PUT_BYTES(ptr, size);
-  // wait for acknowledgement for sent header
+  ret += uartio_send_sync(CONFIG_PRINT_PORT, ptr, size);
+  // wait for acknowledgement for sent data
   wait_ack();
 
   return ret;
 }
 
 /* send a printf string in a synchronized way */
-static size_t msp_send_printf(const char *format, ...) {
+size_t msp_send_printf(const char *format, ...) {
   size_t ret = 0;
   // send the type
   ret += _PUTC(UARTIO_MSG_TYPE_PRINTF_STR);
@@ -98,8 +102,15 @@ static size_t msp_send_printf(const char *format, ...) {
   va_start(a, format);
   ret += _msp_port_vprintf(CONFIG_PRINT_PORT, format, a);
   va_end(a); 
-  // wait for acknowledgement for sent header
+  // send the end of string symbol
+  ret += _PUTC(UARTIO_STRING_END);
+
+  // wait for acknowledgement for sent the string
   wait_ack();
 
   return ret;
+}
+
+size_t msp_end_printing() {
+  return msp_send_printf("@@@@");
 }
