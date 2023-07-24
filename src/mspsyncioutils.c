@@ -1,4 +1,3 @@
-#include <libmatAbstract/mat.h>
 #include <libmspsyncioutils/mspsyncioutils.h>
 #include <libmspsyncioutils/uartio_msg.h>
 
