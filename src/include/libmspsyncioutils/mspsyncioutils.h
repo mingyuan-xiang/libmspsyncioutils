@@ -59,6 +59,12 @@ size_t msp_send_printf(const char *format, ...);
 */
 size_t msp_end_printing();
 
+/*
+* receive a matrix in a synchronized way
+* the matrix size is defined in the mat header
+*/
+size_t msp_recv_mat(mat_t* mat);
+
 #endif
 
 #endif /* INCLUDE_MSPSYNCIOUTILS_H */

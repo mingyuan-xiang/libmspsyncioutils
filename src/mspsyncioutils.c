@@ -113,3 +113,20 @@ size_t msp_send_printf(const char *format, ...) {
 size_t msp_end_printing() {
   return msp_send_printf("@@@@");
 }
+
+/*
+* send UARTIO_MSG_TYPE_RECV_DONE to notify the receive is done
+*/
+void ack_recv() {
+  _PUTC(UARTIO_MSG_TYPE_RECV_DONE);
+}
+
+size_t msp_recv_mat(mat_t* mat) {
+  uint16_t size = mat->strides[0] * mat->dims[0] * sizeof(int16_t);
+  uartio_recv_sync(CONFIG_PRINT_PORT, (uint8_t*)(mat->data), size);
+
+  /* send notification to mark the receiving is done */
+  ack_recv();
+  
+  return size;
+}
