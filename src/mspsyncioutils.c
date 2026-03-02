@@ -122,7 +122,7 @@ void ack_recv() {
 }
 
 size_t msp_recv_mat(mat_t* mat) {
-  uint16_t size = mat->strides[0] * mat->dims[0] * sizeof(int16_t);
+  size_t size = mat->strides[0] * mat->dims[0] * sizeof(int16_t);
   uartio_recv_sync(CONFIG_PRINT_PORT, (uint8_t*)(mat->data), size);
 
   /* send notification to mark the receiving is done */
