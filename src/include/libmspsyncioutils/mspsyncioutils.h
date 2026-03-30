@@ -6,7 +6,7 @@
 
 #include <libmspio/uartio.h>
 #include <libmspprintf/mspprintf.h>
-#include <libmatAbstract/mat.h>
+#include <libLunaNN/mat.h>
 
 /*
 * This is a wrapper on libmspio library.

@@ -2,7 +2,7 @@ LIB = libmspsyncioutils
 
 OBJECTS = mspsyncioutils.o
 
-DEPS += libmatAbstract libmspprintf libmspio
+DEPS += libLunaNN libmspprintf libmspio
 
 override SRC_ROOT = ../../src
 

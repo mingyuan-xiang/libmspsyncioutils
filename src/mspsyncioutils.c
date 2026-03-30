@@ -35,7 +35,7 @@ size_t msp_send_mat(mat_t* mat) {
   wait_ack();
 
   // send the matrix data
-  size_t size = MAT_GET_SIZE(mat);
+  size_t size = mat->data_len;
   size_t st = 0;
   size_t ed = UARTIO_16BIT_BUFFER_SIZE;
   while (size > UARTIO_16BIT_BUFFER_SIZE) {
@@ -50,7 +50,7 @@ size_t msp_send_mat(mat_t* mat) {
     size -= UARTIO_16BIT_BUFFER_SIZE;
   }
 
-  ed = MAT_GET_SIZE(mat);
+  ed = mat->data_len;
   for (int i = st; i < ed; i++) {
     ret += _PUT16((uint16_t)(mat->data[i]));
   }
@@ -122,7 +122,7 @@ void ack_recv() {
 }
 
 size_t msp_recv_mat(mat_t* mat) {
-  size_t size = mat->strides[0] * mat->dims[0] * sizeof(int16_t);
+  size_t size = (size_t)(mat->data_len) * sizeof(int16_t);
   uartio_recv_sync(CONFIG_PRINT_PORT, (uint8_t*)(mat->data), size);
 
   /* send notification to mark the receiving is done */
