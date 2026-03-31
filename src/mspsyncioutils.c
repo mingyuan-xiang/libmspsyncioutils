@@ -28,7 +28,7 @@ size_t msp_send_mat(mat_t* mat) {
   ret += _PUTC(UARTIO_MSG_TYPE_MAT);
   // send the matrix shape
   ret += _PUT16(mat->len_dims);
-  for (int i = 0; i < mat->len_dims; i++) {
+  for (size_t i = 0; i < mat->len_dims; i++) {
     ret += _PUT16(mat->dims[i]);
   }
   // wait for acknowledgement for sent header
@@ -39,7 +39,7 @@ size_t msp_send_mat(mat_t* mat) {
   size_t st = 0;
   size_t ed = UARTIO_16BIT_BUFFER_SIZE;
   while (size > UARTIO_16BIT_BUFFER_SIZE) {
-    for (int i = st; i < ed; i++) {
+    for (size_t i = st; i < ed; i++) {
       ret += _PUT16((uint16_t)(mat->data[i]));
     }
     // wait for acknowledgement for sent data
@@ -51,7 +51,7 @@ size_t msp_send_mat(mat_t* mat) {
   }
 
   ed = mat->data_len;
-  for (int i = st; i < ed; i++) {
+  for (size_t i = st; i < ed; i++) {
     ret += _PUT16((uint16_t)(mat->data[i]));
   }
   // wait for acknowledgement for sent data
